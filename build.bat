@@ -13,6 +13,7 @@ if %errorlevel% equ 0 (
     timeout /t 1 /nobreak > nul
     cls
     echo success. loading game...
+    timeout /t 2 /nobreak > nul
     main.exe
 ) else (
     echo Error. pls check your location
