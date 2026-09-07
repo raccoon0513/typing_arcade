@@ -3,4 +3,4 @@
 
 void run_tetris(void);
 
-#endif /* TETRIS_H */
+#endif
