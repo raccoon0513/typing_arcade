@@ -1,0 +1,8 @@
+# build command
+
+gcc -I. main.c src/utils/utils.c src/components/tetris/tetris.c -o main.exe
+
+
+# launch exe
+
+./main.exe

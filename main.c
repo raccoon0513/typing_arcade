@@ -26,8 +26,9 @@ static void render_menu(const char* input_buf) {
 
 int main(void) {
     srand((unsigned)time(NULL));
-    hide_cursor();
-    clear_screen();
+    
+    // 프로그램 시작 시 콘솔 환경 설정 한 번에 완료
+    init_console();
 
     GameState current_state = STATE_MENU;
     char input_buf[20] = { 0 };

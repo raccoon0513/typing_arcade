@@ -81,7 +81,7 @@ static void render(void) {
     gotoxy(0, 0);
     printf("============================\n");
     printf(" SCORE: %d\n", score);
-    printf(" 명령어: left, right, turn, drop, quit\n");
+    printf(" command: left, right, turn, drop, quit\n");
     printf(" (입력 후 Enter를 누르세요)\n");
     printf("============================\n");
 

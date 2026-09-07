@@ -4,6 +4,12 @@
 #include <string.h>
 #include "utils.h"
 
+void init_console(void) {
+    system("chcp 65001 > nul"); // 터미널 인코딩을 UTF-8로 고정
+    hide_cursor();              // 커서 숨기기
+    clear_screen();             // 화면 초기화
+}
+
 void gotoxy(int x, int y) {
     COORD pos = { (short)x, (short)y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);

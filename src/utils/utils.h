@@ -8,6 +8,9 @@ typedef enum {
     INPUT_ENTER
 } InputResult;
 
+// 콘솔 환경 초기화 (UTF-8 설정, 커서 숨김 등)
+void init_console(void);
+
 void gotoxy(int x, int y);
 void hide_cursor(void);
 void clear_screen(void);
