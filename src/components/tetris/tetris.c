@@ -4,8 +4,10 @@
 #include <time.h>
 #include <conio.h>
 #include <string.h>
+
 #include "../../utils/utils.h"
 #include "tetris.h"
+#include "../word_db.h"
 
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
@@ -103,6 +105,59 @@ static void render(void) {
     }
     printf("<!====================!>\n\n");
     printf("현재 입력: %-15s \n", input_buf);
+}
+
+// 입력 검사 로직 예시 (tetris.c)
+void handle_typing_command(const char* input_buf, TargetWords* words, WordDifficulty current_diff) {
+    if (strcmp(input_buf, words->left) == 0) {
+        move_block_left();
+        strcpy(words->left, get_random_word(current_diff)); // 성공 시 새 단어로 교체!
+    } else if (strcmp(input_buf, words->right) == 0) {
+        move_block_right();
+        strcpy(words->right, get_random_word(current_diff));
+    } else if (strcmp(input_buf, words->rotate) == 0) {
+        rotate_block();
+        strcpy(words->rotate, get_random_word(current_diff));
+    } else if (strcmp(input_buf, words->drop) == 0) {
+        hard_drop_block();
+        strcpy(words->drop, get_random_word(current_diff));
+    }
+}
+
+void refresh_target_words(TargetWords* words, WordDifficulty diff) {
+    strcpy(words->left, get_random_word(diff));
+    strcpy(words->right, get_random_word(diff));
+    strcpy(words->rotate, get_random_word(diff));
+    strcpy(words->drop, get_random_word(diff));
+}
+
+
+void draw_side_panel(const TargetWords* words, int current_level) {
+    int start_x = 26;
+    
+    gotoxy(start_x, 3);
+    printf("======================");
+    gotoxy(start_x, 4);
+    printf("   COMMAND TARGETS   ");
+    gotoxy(start_x, 5);
+    printf("======================");
+
+    gotoxy(start_x, 7);
+    printf("[LEFT]   : %-10s", words->left);
+    
+    gotoxy(start_x, 9);
+    printf("[RIGHT]  : %-10s", words->right);
+    
+    gotoxy(start_x, 11);
+    printf("[ROTATE] : %-10s", words->rotate);
+    
+    gotoxy(start_x, 13);
+    printf("[DROP]   : %-10s", words->drop);
+    
+    gotoxy(start_x, 15);
+    printf("======================");
+    gotoxy(start_x, 16);
+    printf(" CURRENT LEVEL: %d", current_level);
 }
 
 void run_tetris(void) {

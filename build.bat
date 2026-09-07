@@ -1,6 +1,10 @@
 @echo off
 chcp 65001 > nul
-echo compiling
+echo compiling...
+
+if exist main.exe (
+    del /f /q main.exe
+)
 
 gcc -I. main.c src/utils/utils.c src/components/tetris/tetris.c -o main.exe
 
