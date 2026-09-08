@@ -37,27 +37,23 @@ void init_target_words(TargetWords* words, WordDifficulty diff) {
     strcpy(words->drop, w4);
 }
 
-// 사용자 입력 처리 및 성공 시 해당 단어만 중복 없이 교체
-void handle_typing_command(const char* input_buf, TargetWords* words, WordDifficulty diff) {
+void handle_typing_command(const char* input_buf, TargetWords* words, WordDifficulty current_diff) {
     if (strcmp(input_buf, words->left) == 0) {
         move_block_left();
         const char* used[3] = { words->right, words->rotate, words->drop };
-        strcpy(words->left, get_unique_random_word(diff, used, 3));
-    } 
-    else if (strcmp(input_buf, words->right) == 0) {
+        strcpy(words->left, get_unique_random_word(current_diff, used, 3));
+    } else if (strcmp(input_buf, words->right) == 0) {
         move_block_right();
         const char* used[3] = { words->left, words->rotate, words->drop };
-        strcpy(words->right, get_unique_random_word(diff, used, 3));
-    } 
-    else if (strcmp(input_buf, words->rotate) == 0) {
+        strcpy(words->right, get_unique_random_word(current_diff, used, 3));
+    } else if (strcmp(input_buf, words->rotate) == 0) {
         rotate_block();
         const char* used[3] = { words->left, words->right, words->drop };
-        strcpy(words->rotate, get_unique_random_word(diff, used, 3));
-    } 
-    else if (strcmp(input_buf, words->drop) == 0) {
+        strcpy(words->rotate, get_unique_random_word(current_diff, used, 3));
+    } else if (strcmp(input_buf, words->drop) == 0) {
         hard_drop_block();
         const char* used[3] = { words->left, words->right, words->rotate };
-        strcpy(words->drop, get_unique_random_word(diff, used, 3));
+        strcpy(words->drop, get_unique_random_word(current_diff, used, 3));
     }
 }
 //===================================================
@@ -165,30 +161,26 @@ static void render(void) {
     printf("현재 입력: %-15s \n", input_buf);
 }
 
-// 입력 검사 로직 예시 (tetris.c)
-void handle_typing_command(const char* input_buf, TargetWords* words, WordDifficulty current_diff) {
-    if (strcmp(input_buf, words->left) == 0) {
-        move_block_left();
-        strcpy(words->left, get_random_word(current_diff)); // 성공 시 새 단어로 교체!
-    } else if (strcmp(input_buf, words->right) == 0) {
-        move_block_right();
-        strcpy(words->right, get_random_word(current_diff));
-    } else if (strcmp(input_buf, words->rotate) == 0) {
-        rotate_block();
-        strcpy(words->rotate, get_random_word(current_diff));
-    } else if (strcmp(input_buf, words->drop) == 0) {
-        hard_drop_block();
-        strcpy(words->drop, get_random_word(current_diff));
-    }
-}
+
 
 void refresh_target_words(TargetWords* words, WordDifficulty diff) {
-    strcpy(words->left, get_random_word(diff));
-    strcpy(words->right, get_random_word(diff));
-    strcpy(words->rotate, get_random_word(diff));
-    strcpy(words->drop, get_random_word(diff));
-}
+    const char* used[4] = { "", "", "", "" };
 
+    const char* w1 = get_unique_random_word(diff, used, 0);
+    strcpy(words->left, w1);
+    used[0] = words->left;
+
+    const char* w2 = get_unique_random_word(diff, used, 1);
+    strcpy(words->right, w2);
+    used[1] = words->right;
+
+    const char* w3 = get_unique_random_word(diff, used, 2);
+    strcpy(words->rotate, w3);
+    used[2] = words->rotate;
+
+    const char* w4 = get_unique_random_word(diff, used, 3);
+    strcpy(words->drop, w4);
+}
 
 void draw_side_panel(const TargetWords* words, int current_level) {
     int start_x = 26;
