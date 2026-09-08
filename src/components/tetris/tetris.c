@@ -34,6 +34,13 @@ static int buf_len = 0;
 static int score = 0;
 static int game_over = 0;
 
+
+
+void move_block_left(void){}
+void move_block_right(void){}
+void rotate_block(void){}
+void hard_drop_block(void){}
+
 static int check_collision(int x, int y, int type, int rot) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {

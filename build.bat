@@ -6,7 +6,12 @@ if exist main.exe (
     del /f /q main.exe
 )
 
-gcc -I. main.c src/utils/utils.c src/components/tetris/tetris.c -o main.exe
+set SOURCES=main.c
+for /r src %%f in (*.c) do (
+    call set SOURCES=%%SOURCES%% "%%f"
+)
+
+gcc -I. %SOURCES% -o main.exe
 
 if %errorlevel% equ 0 (
     cls
