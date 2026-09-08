@@ -12,6 +12,11 @@
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 
+void move_block_left(void);
+void move_block_right(void);
+void rotate_block(void);
+void hard_drop_block(void);
+
 static const unsigned short blocks[7][4] = {
     { 0x0F00, 0x2222, 0x0F00, 0x2222 }, // I
     { 0x44C0, 0x8E00, 0xC880, 0xE200 }, // J
