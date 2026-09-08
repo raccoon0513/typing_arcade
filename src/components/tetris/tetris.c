@@ -322,8 +322,10 @@ static void putBomb(int x, int y)
 {
     putText(x, y, "  ", 14);
     if (x >= 0 && x < SCREEN_W && y >= 0 && y < SCREEN_H)
-        frame[y * SCREEN_W + x].Char.UnicodeChar = L'\x25CF';
+        //frame[y * SCREEN_W + x].Char.UnicodeChar = L'\x25CF';
+        frame[y * SCREEN_W + x].Char.UnicodeChar = L'\x263C';
 }
+
 
 static void draw(void)
 {
