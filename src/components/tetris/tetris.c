@@ -133,32 +133,76 @@ static void lock_piece(void) {
     }
 }
 
-static void render(void) {
+void render(const TargetWords* words) {
+    // 1. 화면 좌상단으로 커서 이동 (화면 깜빡임 방지)
     gotoxy(0, 0);
-    printf("============================\n");
-    printf(" SCORE: %d\n", score);
-    printf(" command: left, right, turn, drop, quit\n");
-    printf(" (입력 후 Enter를 누르세요)\n");
-    printf("============================\n");
 
-    for (int i = 0; i < BOARD_HEIGHT; i++) {
-        printf("<!");
-        for (int j = 0; j < BOARD_WIDTH; j++) {
+    // 2. 테트리스 게임 보드 출력
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        printf("│");
+        for (int x = 0; x < BOARD_WIDTH; x++) {
             int is_piece = 0;
-            for (int pi = 0; pi < 4; pi++) {
-                for (int pj = 0; pj < 4; pj++) {
-                    if (blocks[cur_type][cur_rot] & (1 << (15 - (pi * 4 + pj)))) {
-                        if (cur_y + pi == i && cur_x + pj == j) is_piece = 1;
+
+            // 현재 조작 중인 블록 렌더링 검사
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    if (SHAPES[cur_type][cur_rot][i][j]) {
+                        if (cur_x + j == x && cur_y + i == y) {
+                            is_piece = 1;
+                        }
                     }
                 }
             }
-            if (is_piece || board[i][j]) printf("[]");
-            else printf(" .");
+
+            if (is_piece) {
+                printf("■");
+            } else if (board[y][x]) {
+                printf("■");
+            } else {
+                printf("  ");
+            }
         }
-        printf("!>\n");
+        printf("│\n");
     }
-    printf("<!====================!>\n\n");
-    printf("현재 입력: %-15s \n", input_buf);
+
+    // 보드 하단 테두리
+    printf("└");
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        printf("──");
+    }
+    printf("┘\n");
+
+    // 3. 우측 UI 패널 출력 (테트리스 보드 우측 좌표 계산)
+    int ui_x = (BOARD_WIDTH * 2) + 6;
+
+    gotoxy(ui_x, 2);
+    printf("==========================");
+    gotoxy(ui_x, 3);
+    printf("     [ COMMAND TARGETS ]   ");
+    gotoxy(ui_x, 4);
+    printf("==========================");
+
+    gotoxy(ui_x, 6);
+    printf(" [LEFT]   : %-12s", words->left);
+
+    gotoxy(ui_x, 8);
+    printf(" [RIGHT]  : %-12s", words->right);
+
+    gotoxy(ui_x, 10);
+    printf(" [ROTATE] : %-12s", words->rotate);
+
+    gotoxy(ui_x, 12);
+    printf(" [DROP]   : %-12s", words->drop);
+
+    gotoxy(ui_x, 14);
+    printf("==========================");
+
+    // 4. 하단 점수 및 실시간 타자 입력 버퍼 표시
+    gotoxy(0, BOARD_HEIGHT + 2);
+    printf("SCORE : %d          ", score);
+
+    gotoxy(0, BOARD_HEIGHT + 4);
+    printf("INPUT > %-20s", input_buf);
 }
 
 
@@ -211,11 +255,17 @@ void draw_side_panel(const TargetWords* words, int current_level) {
 }
 
 void run_tetris(void) {
+    // 테트리스 보드 및 상태 초기화
     memset(board, 0, sizeof(board));
     memset(input_buf, 0, sizeof(input_buf));
     buf_len = 0;
     score = 0;
     game_over = 0;
+
+    // 1. 단어 시스템 및 난이도 초기화
+    TargetWords target_words;
+    WordDifficulty current_diff = WORD_EASY;
+    init_target_words(&target_words, current_diff);
 
     cur_type = rand() % 7;
     cur_rot = 0;
@@ -223,7 +273,7 @@ void run_tetris(void) {
     cur_y = 0;
 
     clear_screen();
-    render();
+    render(&target_words);
 
     DWORD last_time = GetTickCount();
     DWORD drop_delay = 800;
@@ -231,6 +281,7 @@ void run_tetris(void) {
     while (!game_over) {
         DWORD current_time = GetTickCount();
 
+        // 2. 테트리스 블록 자동 하강 처리
         if (current_time - last_time > drop_delay) {
             if (!check_collision(cur_x, cur_y + 1, cur_type, cur_rot)) {
                 cur_y++;
@@ -238,39 +289,67 @@ void run_tetris(void) {
                 lock_piece();
             }
             last_time = current_time;
-            render();
+            render(&target_words);
         }
 
+        // 3. 비동기 타자 입력 받기
         InputResult input_res = process_async_input(input_buf, &buf_len, sizeof(input_buf));
 
+        // 엔터키 입력 시 명령 매칭 및 단어 교체 처리
         if (input_res == INPUT_ENTER) {
-            if (strcmp(input_buf, "left") == 0) {
+            // "quit" 입력 시 게임 종료
+            if (strcmp(input_buf, "quit") == 0) {
+                break;
+            }
+
+            if (strcmp(input_buf, target_words.left) == 0) {
                 if (!check_collision(cur_x - 1, cur_y, cur_type, cur_rot)) cur_x--;
-            } else if (strcmp(input_buf, "right") == 0) {
+                
+                // 성공 시 left 단어만 중복 없는 새 단어로 교체
+                const char* used[3] = { target_words.right, target_words.rotate, target_words.drop };
+                strcpy(target_words.left, get_unique_random_word(current_diff, used, 3));
+
+            } else if (strcmp(input_buf, target_words.right) == 0) {
                 if (!check_collision(cur_x + 1, cur_y, cur_type, cur_rot)) cur_x++;
-            } else if (strcmp(input_buf, "turn") == 0) {
+                
+                // 성공 시 right 단어만 중복 없는 새 단어로 교체
+                const char* used[3] = { target_words.left, target_words.rotate, target_words.drop };
+                strcpy(target_words.right, get_unique_random_word(current_diff, used, 3));
+
+            } else if (strcmp(input_buf, target_words.rotate) == 0) {
                 int next_rot = (cur_rot + 1) % 4;
                 if (!check_collision(cur_x, cur_y, cur_type, next_rot)) cur_rot = next_rot;
-            } else if (strcmp(input_buf, "drop") == 0) {
+                
+                // 성공 시 rotate 단어만 중복 없는 새 단어로 교체
+                const char* used[3] = { target_words.left, target_words.right, target_words.drop };
+                strcpy(target_words.rotate, get_unique_random_word(current_diff, used, 3));
+
+            } else if (strcmp(input_buf, target_words.drop) == 0) {
                 while (!check_collision(cur_x, cur_y + 1, cur_type, cur_rot)) {
                     cur_y++;
                 }
                 lock_piece();
                 last_time = GetTickCount();
-            } else if (strcmp(input_buf, "quit") == 0) {
-                break;
+
+                // 성공 시 drop 단어만 중복 없는 새 단어로 교체
+                const char* used[3] = { target_words.left, target_words.right, target_words.rotate };
+                strcpy(target_words.drop, get_unique_random_word(current_diff, used, 3));
             }
 
+            // 입력 버퍼 리셋 후 갱신된 화면 재렌더링
             buf_len = 0;
             memset(input_buf, 0, sizeof(input_buf));
-            render();
+            render(&target_words);
+
         } else if (input_res == INPUT_CHAR_ADDED || input_res == INPUT_BACKSPACE) {
-            render();
+            // 글자 타이핑 중 실시간 입력창 갱신
+            render(&target_words);
         }
 
         Sleep(10);
     }
 
+    // 게임 오버 처리
     gotoxy(0, BOARD_HEIGHT + 7);
     printf("\n*** GAME OVER! 최종 점수: %d ***\n", score);
     printf("엔터를 누르면 메인 메뉴로 돌아갑니다...");
